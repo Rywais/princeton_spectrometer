@@ -126,9 +126,9 @@ for k in np.linspace(1,1340,1340):
 # the following makes sure that the camera operates at the correct
 # temperature
 pixis_temp = float(cam.getParameter('CCDTemperature'))
-print 'Initial Pixis Temperature: %f' pixis_temp
+print 'Initial Pixis Temperature: %f' % pixis_temp
 
-while pixis_temp > -75.
+while pixis_temp > -75. :
   pixis_temp = float(cam.getParameter('CCDTemperature'))
   print 'Wait for camera to cool to -75C. Current Temperature: %f' % pixis_temp
   time.sleep(5)
@@ -202,7 +202,7 @@ for i in range(n_image):
   t = difference
   difference = np.array(difference).astype('float64')
   
-  intensity = np.zeros(len(difference[0,:])
+  intensity = np.zeros(len(difference[0,:]))
 
   if line_cam == 0:
     for i in range(len(difference[0,:])):
