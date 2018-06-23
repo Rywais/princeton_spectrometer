@@ -54,8 +54,8 @@ def get_model_num(ser):
 
 def goto_nm_max_speed(ser,nm):
   ser.write('%0.2f GOTO\r' % nm)
-  return serial_read(ser)
-  #return ser.read_until('?')
+  #return serial_read(ser)
+  return ser.read_until('\r')
 
 def get_turret(ser):
   ser.write('?TURRET\r')
@@ -98,8 +98,8 @@ def set_grating(ser, num):
   if num <= 2:
     ser.write(str(num)+' GRATING\r')
     sleep(STANDARD_DELAY)
-    return serial_read(ser)
-    #return ser.read_until()
+    #return serial_read(ser)
+    return ser.read_until('\r')
   else:
     print 'There is no grating with this input'
   return None

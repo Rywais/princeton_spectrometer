@@ -23,7 +23,7 @@ SERIAL_PORT = 'COM4'
 #Configuration of SP2300i parameters
 ######################################################################
 
-start_wave = 1064
+start_wave = 800
 # grating 1 = 1800 grooves/mm Blz = 500nm, grating 2 = 300grooves/mm Blz = 750nm
 start_grating = 2;
 
@@ -45,7 +45,7 @@ mmc.loadSystemConfiguration ('MMConfig.cfg');
 #Beginning of control parameters for SP2300i
 ######################################################################
 
-ser = serial.Serial(baudrate=9600,port=SERIAL_PORT,timeout=0.1)
+ser = serial.Serial(baudrate=9600,port=SERIAL_PORT,timeout=20)
 
 if start_grating == 1:
   grating_num = 1800
@@ -96,24 +96,27 @@ d = 1./grating_num
 lambda_at_pixel = np.array([])
 
 # Non-functional, just use Matlab values below
-#for i in nth_pixel:
-#  zeta_angle = i*x*np.cos(delta*np.pi/180.)/(f+i*x*np.sin(delta*np.pi/180.))
-#  zeta = np.arctan(zeta_angle)*180./np.pi
-#  #psi is the rotational angle of the grating
-#  psi = np.arcsin(m*_lambda/(2.*d*np.cos(gamma/2*np.pi/180.)))*180./np.pi 
-#  lambda_prime = ( (d/m) * ( \
-#  np.sin( (psi-gamma/2.) *180./np.pi) + \
-#  np.sin( (psi + gamma/2. + zeta) * 180./np.pi) ) \
-#  ) * 1e-3
-#  lambda_at_pixel = np.append(lambda_at_pixel, lambda_prime)
+for i in nth_pixel:
+  zeta_angle = i*x*np.cos(delta*np.pi/180.)/(f+i*x*np.sin(delta*np.pi/180.))
+  print 'Zeta Angle: ' + str(zeta_angle)
+  zeta = np.arctan(zeta_angle)*180./np.pi
+  print 'Zeta: ' + str(zeta)
+  #psi is the rotational angle of the grating
+  psi = np.arcsin(m*_lambda/(2.*d*np.cos(gamma/2*np.pi/180.)))*180./np.pi
+  print 'Psi: ' + str(psi)  
+  lambda_prime = ( (d/m) * ( \
+  np.sin( (psi-gamma/2.) *np.pi/180.) + \
+  np.sin( (psi + gamma/2. + zeta) * np.pi/180.) ) \
+  ) * 1e-3
+  lambda_at_pixel = np.append(lambda_at_pixel, lambda_prime)
 
+print lambda_at_pixel
+  
 # use linear regression to fit the data to a second degree polynomial,
 # where it solves for the values of the coefficients
-#pixel_points = np.array([670.,1005,1340])
-#fit = np.polyfit(pixel_points, lambda_at_pixel,2)
+pixel_points = np.array([670.,1005,1340])
+fit = np.polyfit(pixel_points, lambda_at_pixel,2)
 
-#MATLAB Output for fit:
-fit = np.array([-3.8326e-15,2.0681e-10,9.2736e-07])
 true_lambda = np.array([])
 # converts the pixel number to wavelength using the coefficients found
 # above
