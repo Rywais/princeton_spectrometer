@@ -36,15 +36,9 @@ shutterdelay = 0
 n_image = 1
 line_cam = 0 #Which line to view, average the whole image if zero
 
-from picam import *
-cam = picam()
-cam.loadLibrary()
-cam.getAvailableCameras()
-cam.connect()
-
-#TODO: mmc.loadSystemConfiguration ('MMConfig.cfg');
-cam.setParameter("ReadoutControlMode", 1) #FullFrame
-
+import MMCorePy
+mmc = MMCorePy.CMMCore()
+mmc.loadSystemConfiguration ('MMConfig.cfg');
 
 
 ######################################################################
@@ -142,11 +136,11 @@ for k in np.linspace(1,1340,1340):
 
 # the following makes sure that the camera operates at the correct
 # temperature
-pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
+pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
 print 'Initial Pixis Temperature: %f' % pixis_temp
 
 while pixis_temp > -75. :
-  pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
+  pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
   print 'Wait for camera to cool to -75C. Current Temperature: %f' % pixis_temp
   time.sleep(5)
 
@@ -160,27 +154,22 @@ while pixis_temp > -75. :
 ### input them correctly.
 ############################################################
 
-cam.setParameter('ExposureTime', exposure)
-cam.setParameter('AdcAnalogGain', gain)
+mmc.setProperty('PIXIS','Exposure',exposure);
+mmc.setProperty('PIXIS','Gain',gain)
 
 if shutter == 1:
   shutter = 'Always closed'
-  shutter = 2 #In compliance with PICAM library
 elif shutter == 2:
   shutter = 'Always Open'
-  shutter = 3
 elif shutter == 3:
   shutter = 'Normal'
-  shutter = 1
 else:
   shutter = 'Open Before Trigger'
-  shutter = 4
+
+mmc.setProperty('PIXIS','ShutterMode',shutter)
+mmc.setProperty('PIXIS','ShutterCloseDelay',shutterdelay);
 
 
-cam.setParameter('ShutterTimingMode', shutter)
-cam.setParameter('ShutterClosingDelay', shutterdelay)
-
-cam.sendConfiguration() # TODO: is this deviation from original code necessary?
 ############################################################
 ### End of camera parameters
 ############################################################
@@ -189,19 +178,18 @@ print 'Taking a background image. . .'
 # the code for taking an image came from:
 # https://micro-manager.org/wiki/Matlab_Configuration, and then some slight
 # modifications were made
-img = cam.readNFrames(N=1,timeout=5000)
-
-width = 1340
-height = 100
+mmc.snapImage()
+img = mmc.getImage()
+width = mmc.getImageWidth()
+height = mmc.getImageHeight()
 
 #Erase extraneous dimesnions to treat image as 2D numpy array
 img = np.array(img)
-img = np.squeeze(img)
-img = np.reshape(img,(height,width)) 
-img = img.astype('uint16')
 
-t = Image.fromarray(img, mode='I;16')
-#TODO: validate that the stuff missing from here is irrelevant
+img = np.reshape(img, (height,width))
+img = img.astype('uint32')
+
+t = Image.fromarray(img.astype('uint16'), mode='I;16')
 t.save('background_image.tif')
 t.close()
 my_file = open('background.npy', 'w')
@@ -218,15 +206,17 @@ while True:
 
 print 'Camera will now take the images and the program will analyze them!'
 for i in range(n_image):
-  img = cam.readNFrames(N=1,timeout=5000)
+  mmc.snapImage()
+  img = mmc.getImage()
+  width = mmc.getImageWidth()
+  height = mmc.getImageHeight()
   img = np.array(img)
-  img = np.squeeze(img)
-  img = np.reshape(img,(height,width)) 
-  img = img.astype('uint16')
+  img = np.reshape(img, (height,width))
+  img = img.astype('uint32')
   now = datetime.datetime.now()
   fullname = now.strftime('Raw_Image_Data_%Y-%m-%dT%H-%M-%S.tif')
   
-  t = Image.fromarray(img, mode='I;16')
+  t = Image.fromarray(img.astype('uint16'), mode='I;16')
   t.save(fullname)
   t.close()
 
@@ -240,7 +230,9 @@ for i in range(n_image):
   #Ryan's approach using Saved Numpy Arrays
   #background_array = np.load('background.npy')
   difference = img.astype('int32') - background_array.astype('int32')
+  #difference = img - background_array
   difference = (difference.clip(min=0)).astype('uint32')
+  #difference = (difference.clip(min=0)).astype('uint16')
   t = Image.fromarray(difference)
 
   
@@ -248,7 +240,8 @@ for i in range(n_image):
 
   if line_cam == 0:
     for i in range(len(difference[0,:])):
-      intensity[i] = np.sum(difference[:,i].astype('float64'))/100.
+      #intensity[i] = (np.sum(difference[:,i])).astype('float64')/100.
+	  intensity[i] = (np.sum(difference[:,i]))/100.
   else:
     for i in range(len(difference[0,:])):
       intensity[i] = difference[line_cam, i]
@@ -262,6 +255,7 @@ for i in range(n_image):
   ax.set_ylabel('Intensity')
 
   ax.plot(true_lambda, intensity)
+  #ax.plot(difference[:,799])
   plt.show()
 
   current_date_time = now.strftime('%Y-%m-%dT%H-%M-%S')
