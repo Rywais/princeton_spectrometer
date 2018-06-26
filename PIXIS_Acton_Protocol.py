@@ -101,22 +101,16 @@ d = 1./grating_num
 # Manual, version 2.4M
 lambda_at_pixel = np.array([])
 
-# Non-functional, just use Matlab values below
 for i in nth_pixel:
   zeta_angle = i*x*np.cos(delta*np.pi/180.)/(f+i*x*np.sin(delta*np.pi/180.))
-  print 'Zeta Angle: ' + str(zeta_angle)
   zeta = np.arctan(zeta_angle)*180./np.pi
-  print 'Zeta: ' + str(zeta)
   #psi is the rotational angle of the grating
   psi = np.arcsin(m*_lambda/(2.*d*np.cos(gamma/2*np.pi/180.)))*180./np.pi
-  print 'Psi: ' + str(psi)  
   lambda_prime = ( (d/m) * ( \
   np.sin( (psi-gamma/2.) *np.pi/180.) + \
   np.sin( (psi + gamma/2. + zeta) * np.pi/180.) ) \
   ) * 1e-3
   lambda_at_pixel = np.append(lambda_at_pixel, lambda_prime)
-
-print lambda_at_pixel
 
 # use linear regression to fit the data to a second degree polynomial,
 # where it solves for the values of the coefficients

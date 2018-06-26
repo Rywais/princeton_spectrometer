@@ -95,23 +95,17 @@ d = 1./grating_num
 # Manual, version 2.4M
 lambda_at_pixel = np.array([])
 
-# Non-functional, just use Matlab values below
 for i in nth_pixel:
   zeta_angle = i*x*np.cos(delta*np.pi/180.)/(f+i*x*np.sin(delta*np.pi/180.))
-  print 'Zeta Angle: ' + str(zeta_angle)
   zeta = np.arctan(zeta_angle)*180./np.pi
-  print 'Zeta: ' + str(zeta)
   #psi is the rotational angle of the grating
   psi = np.arcsin(m*_lambda/(2.*d*np.cos(gamma/2*np.pi/180.)))*180./np.pi
-  print 'Psi: ' + str(psi)  
   lambda_prime = ( (d/m) * ( \
   np.sin( (psi-gamma/2.) *np.pi/180.) + \
   np.sin( (psi + gamma/2. + zeta) * np.pi/180.) ) \
   ) * 1e-3
   lambda_at_pixel = np.append(lambda_at_pixel, lambda_prime)
 
-print lambda_at_pixel
-  
 # use linear regression to fit the data to a second degree polynomial,
 # where it solves for the values of the coefficients
 pixel_points = np.array([670.,1005,1340])
@@ -233,9 +227,7 @@ for i in range(n_image):
   #Ryan's approach using Saved Numpy Arrays
   #background_array = np.load('background.npy')
   difference = img.astype('int32') - background_array.astype('int32')
-  #difference = img - background_array
-  difference = (difference.clip(min=0)).astype('uint32')
-  #difference = (difference.clip(min=0)).astype('uint16')
+  difference = (difference.clip(min=0)).astype('uint16')
   t = Image.fromarray(difference)
 
   
@@ -243,8 +235,7 @@ for i in range(n_image):
 
   if line_cam == 0:
     for i in range(len(difference[0,:])):
-      #intensity[i] = (np.sum(difference[:,i])).astype('float64')/100.
-	  intensity[i] = (np.sum(difference[:,i]))/100.
+      intensity[i] = (np.sum(difference[:,i])).astype('float64')/100.
   else:
     for i in range(len(difference[0,:])):
       intensity[i] = difference[line_cam, i]

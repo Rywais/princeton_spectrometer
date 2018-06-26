@@ -8,18 +8,21 @@ import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
 
 
-def use_spectrometer( ser, start_wave, start_grating, bool_picam):
+def use_spectrometer(ser,
+                     start_wave,
+                     start_grating,
+                     bool_picam,
+                     bool_background):
   ######################################################################
   ### Python code specific User Parameters
   ######################################################################
   
-  SERIAL_PORT = 'COM4' #TODO: Correct for parameter
+  SERIAL_PORT = ser
   
   ######################################################################
   #Configuration of SP2300i parameters
   ######################################################################
   
-  start_wave = 800
   # grating 1 = 1800 grooves/mm Blz = 500nm, grating 2 = 300grooves/mm Blz = 750nm
   start_grating = 2;
   
@@ -32,17 +35,20 @@ def use_spectrometer( ser, start_wave, start_grating, bool_picam):
   n_image = 1
   line_cam = 0 #Which line to view, average the whole image if zero
   
-  from picam import *
-  cam = picam()
-  cam.loadLibrary()
-  cam.getAvailableCameras()
-  cam.connect()
+  #Code will be split like this between the two implementations as necessary
+  if bool_picam:
+    from picam import *
+    cam = picam()
+    cam.loadLibrary()
+    cam.getAvailableCameras()
+    cam.connect()
+    cam.setParameter("ReadoutControlMode", 1) #FullFrame
+  else:
+    import MMCorePy
+    mmc = MMCorePy.CMMCore()
+    mmc.loadSystemConfiguration ('MMConfig.cfg');
   
-  #TODO: mmc.loadSystemConfiguration ('MMConfig.cfg');
-  cam.setParameter("ReadoutControlMode", 1) #FullFrame
-  
-  
-  
+
   ######################################################################
   #Beginning of control parameters for SP2300i
   ######################################################################
@@ -59,12 +65,10 @@ def use_spectrometer( ser, start_wave, start_grating, bool_picam):
   print 'Please wait for the changes to be made. Thanks!'
   # goes to the central wavelength at the maximum speed
   # returns a statement that indicates whether the command was followed
-  print 'goto_nm_max_speed:'
-  print pix.goto_nm_max_speed(ser, start_wave)
+  pix.goto_nm_max_speed(ser, start_wave)
   # sets the grating of choice
   # returns a statement that indicates whether the command was followed
-  print 'set_grating:'
-  print pix.set_grating(ser, start_grating)
+  pix.set_grating(ser, start_grating)
   ############################################################
   ### End of control parameters for SP2300i
   ############################################################
@@ -100,19 +104,14 @@ def use_spectrometer( ser, start_wave, start_grating, bool_picam):
   # Non-functional, just use Matlab values below
   for i in nth_pixel:
     zeta_angle = i*x*np.cos(delta*np.pi/180.)/(f+i*x*np.sin(delta*np.pi/180.))
-    print 'Zeta Angle: ' + str(zeta_angle)
     zeta = np.arctan(zeta_angle)*180./np.pi
-    print 'Zeta: ' + str(zeta)
     #psi is the rotational angle of the grating
     psi = np.arcsin(m*_lambda/(2.*d*np.cos(gamma/2*np.pi/180.)))*180./np.pi
-    print 'Psi: ' + str(psi)  
     lambda_prime = ( (d/m) * ( \
     np.sin( (psi-gamma/2.) *np.pi/180.) + \
     np.sin( (psi + gamma/2. + zeta) * np.pi/180.) ) \
     ) * 1e-3
     lambda_at_pixel = np.append(lambda_at_pixel, lambda_prime)
-  
-  print lambda_at_pixel
   
   # use linear regression to fit the data to a second degree polynomial,
   # where it solves for the values of the coefficients
@@ -141,13 +140,20 @@ def use_spectrometer( ser, start_wave, start_grating, bool_picam):
   
   # the following makes sure that the camera operates at the correct
   # temperature
-  pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
-  print 'Initial Pixis Temperature: %f' % pixis_temp
-  
-  while pixis_temp > -75. :
+
+  #TODO: Add output for user to see that the camera is cooling!
+  if bool_picam:
     pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
-    print 'Wait for camera to cool to -75C. Current Temperature: %f' % pixis_temp
-    time.sleep(5)
+    
+    while pixis_temp > -75. :
+      pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
+      time.sleep(5)
+  else:
+    pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
+
+    while pixis_temp > -75. :
+      pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
+      time.sleep(5)
   
   ############################################################
   ### This next section asks the user to input parameters for the camera
@@ -159,56 +165,94 @@ def use_spectrometer( ser, start_wave, start_grating, bool_picam):
   ### input them correctly.
   ############################################################
   
-  cam.setParameter('ExposureTime', exposure)
-  cam.setParameter('AdcAnalogGain', gain)
-  
-  if shutter == 1:
-    shutter = 'Always closed'
-    shutter = 2 #In compliance with PICAM library
-  elif shutter == 2:
-    shutter = 'Always Open'
-    shutter = 3
-  elif shutter == 3:
-    shutter = 'Normal'
-    shutter = 1
+  if bool_picam:
+    cam.setParameter('ExposureTime', exposure)
+    cam.setParameter('AdcAnalogGain', gain)
+    
+    if shutter == 1:
+      shutter = 'Always closed'
+      shutter = 2 #In compliance with PICAM library
+    elif shutter == 2:
+      shutter = 'Always Open'
+      shutter = 3
+    elif shutter == 3:
+      shutter = 'Normal'
+      shutter = 1
+    else:
+      shutter = 'Open Before Trigger'
+      shutter = 4
+    
+    
+    cam.setParameter('ShutterTimingMode', shutter)
+    cam.setParameter('ShutterClosingDelay', shutterdelay)
+    
+    cam.sendConfiguration() 
   else:
-    shutter = 'Open Before Trigger'
-    shutter = 4
-  
-  
-  cam.setParameter('ShutterTimingMode', shutter)
-  cam.setParameter('ShutterClosingDelay', shutterdelay)
-  
-  cam.sendConfiguration() # TODO: is this deviation from original code necessary?
+   mmc.setProperty('PIXIS','Exposure',exposure);
+   mmc.setProperty('PIXIS','Gain',gain)
+
+   if shutter == 1:
+     shutter = 'Always closed'
+   elif shutter == 2:
+     shutter = 'Always Open'
+   elif shutter == 3:
+     shutter = 'Normal'
+   else:
+     shutter = 'Open Before Trigger'
+
+   mmc.setProperty('PIXIS','ShutterMode',shutter)
+   mmc.setProperty('PIXIS','ShutterCloseDelay',shutterdelay);
+  #End of if/else block
+
   ############################################################
   ### End of camera parameters
   ############################################################
   
-  print 'Taking a background image. . .'
   # the code for taking an image came from:
   # https://micro-manager.org/wiki/Matlab_Configuration, and then some slight
   # modifications were made
-  img = cam.readNFrames(N=1,timeout=5000)
-  
-  width = 1340
-  height = 100
+  if bool_picam:
+    img = cam.readNFrames(N=1,timeout=5000)
+    
+    width = 1340
+    height = 100
+  else:
+    mmc.snapImage()
+    img = mmc.getImage()
+    width = mmc.getImageWidth()
+    height = mmc.getImageHeight()
+
   
   #Erase extraneous dimesnions to treat image as 2D numpy array
-  img = np.array(img)
-  img = np.squeeze(img)
-  img = np.reshape(img,(height,width)) 
-  img = img.astype('uint16')
-  
-  t = Image.fromarray(img, mode='I;16')
-  #TODO: validate that the stuff missing from here is irrelevant
-  t.save('background_image.tif')
-  t.close()
-  my_file = open('background.npy', 'w')
-  np.save(my_file, img)
-  my_file.close()
+  if bool_picam:
+    img = np.array(img)
+    img = np.squeeze(img)
+    img = np.reshape(img,(height,width)) 
+    img = img.astype('uint16')
+    
+    t = Image.fromarray(img, mode='I;16')
+    t.save('background_image.tif')
+    t.close()
+    my_file = open('background.npy', 'w')
+    np.save(my_file, img)
+    my_file.close()
+  else:
+    img = np.array(img)
+
+    img = np.reshape(img, (height,width))
+    img = img.astype('uint32')
+
+    t = Image.fromarray(img.astype('uint16'), mode='I;16')
+    t.save('background_image.tif')
+    t.close()
+    my_file = open('background.npy', 'w')
+    np.save(my_file, img)
+    my_file.close()
+  #End of if/else block
   
   background_array = img
   
+  #TODO: Re-implement as Tkinter MessageBox???
   prompt = 'Input 1 when the lightsource is ready and running.\n\n'
   while True:
     my_input = raw_input(prompt)
@@ -217,27 +261,30 @@ def use_spectrometer( ser, start_wave, start_grating, bool_picam):
   
   print 'Camera will now take the images and the program will analyze them!'
   for i in range(n_image):
-    img = cam.readNFrames(N=1,timeout=5000)
-    img = np.array(img)
-    img = np.squeeze(img)
-    img = np.reshape(img,(height,width)) 
-    img = img.astype('uint16')
+    if bool_picam:
+      img = cam.readNFrames(N=1,timeout=5000)
+      img = np.array(img)
+      img = np.squeeze(img)
+      img = np.reshape(img,(height,width)) 
+      img = img.astype('uint16')
+    else:
+      mmc.snapImage()
+      img = mmc.getImage()
+      width = mmc.getImageWidth()
+      height = mmc.getImageHeight()
+      img = np.array(img)
+      img = np.reshape(img, (height,width))
+      img = img.astype('uint32')
     now = datetime.datetime.now()
     fullname = now.strftime('Raw_Image_Data_%Y-%m-%dT%H-%M-%S.tif')
     
-    t = Image.fromarray(img, mode='I;16')
+    t = Image.fromarray(img.astype('uint16'), mode='I;16')
     t.save(fullname)
     t.close()
   
-    #Lisa's approach using Saved images
-  # current_image = t.convert('L')
-  # background_image = Image.open('background_image.tif').convert('L')
-  # difference = ImageChops.subtract(current_image, background_image)
-  # t = difference
-  # difference = np.array(difference).astype('float64')
-  
     #Ryan's approach using Saved Numpy Arrays
-    #background_array = np.load('background.npy')
+    if ~bool_background:
+      background_array = np.load('background.npy')
     difference = img.astype('int32') - background_array.astype('int32')
     difference = (difference.clip(min=0)).astype('uint32')
     t = Image.fromarray(difference)
