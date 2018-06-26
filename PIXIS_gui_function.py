@@ -9,10 +9,13 @@ import PIXIS_Acton_Functions as pix
 
 
 def use_spectrometer(ser,
-                     start_wave,
-                     start_grating,
-                     bool_picam,
-                     bool_background):
+                     start_wave=900,
+                     start_grating=1,
+                     shutter_status=3,
+                     shutter_delay=0,
+                     exposure=100,
+                     bool_picam=True,
+                     bool_background=True):
   ######################################################################
   ### Python code specific User Parameters
   ######################################################################
@@ -24,14 +27,13 @@ def use_spectrometer(ser,
   ######################################################################
   
   # grating 1 = 1800 grooves/mm Blz = 500nm, grating 2 = 300grooves/mm Blz = 750nm
-  start_grating = 2;
+
   
   dynamic = 0 #keep capturing images if 1, or 1 image at a time if 0
-  exposure = 100 #in ms
   gain = 1
   # 1.) Always Closed 2.) Always Open 3.) Normal 4.) Open Before Trigger
-  shutter = 3;
-  shutterdelay = 0
+  shutter = shutter_status
+  shutterdelay = shutter_delay
   n_image = 1
   line_cam = 0 #Which line to view, average the whole image if zero
   
@@ -259,7 +261,6 @@ def use_spectrometer(ser,
     if my_input == '1':
       break
   
-  print 'Camera will now take the images and the program will analyze them!'
   for i in range(n_image):
     if bool_picam:
       img = cam.readNFrames(N=1,timeout=5000)
@@ -323,6 +324,52 @@ def use_spectrometer(ser,
   ###########################################################
   ### End of Image Acquisition, Subraction of Background Noise, and Calibration
   ###########################################################
+
+def set_shutter_status(shutter_status=3,bool_picam=True):
   
-  
-  
+  shutter = shutter_status
+
+  if bool_picam:
+    from picam import *
+    cam = picam()
+    cam.loadLibrary()
+    cam.getAvailableCameras()
+    cam.connect()
+  else:
+    import MMCorePy
+    mmc = MMCorePy.CMMCore()
+    mmc.loadSystemConfiguration ('MMConfig.cfg');
+
+  if bool_picam:
+    if shutter == 1:
+      shutter = 'Always closed'
+      shutter = 2 #In compliance with PICAM library
+    elif shutter == 2:
+      shutter = 'Always Open'
+      shutter = 3
+    elif shutter == 3:
+      shutter = 'Normal'
+      shutter = 1
+    else:
+      shutter = 'Open Before Trigger'
+      shutter = 4
+    
+    
+    cam.setParameter('ShutterTimingMode', shutter)
+    cam.sendConfiguration() 
+  else:
+   mmc.setProperty('PIXIS','Exposure',exposure);
+   mmc.setProperty('PIXIS','Gain',gain)
+
+   if shutter == 1:
+     shutter = 'Always closed'
+   elif shutter == 2:
+     shutter = 'Always Open'
+   elif shutter == 3:
+     shutter = 'Normal'
+   else:
+     shutter = 'Open Before Trigger'
+
+   mmc.setProperty('PIXIS','ShutterMode',shutter)
+   mmc.setProperty('PIXIS','ShutterCloseDelay',shutterdelay);
+  #End of if/else block
