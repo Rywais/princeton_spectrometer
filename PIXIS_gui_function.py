@@ -373,3 +373,18 @@ def set_shutter_status(shutter_status=3,bool_picam=True):
    mmc.setProperty('PIXIS','ShutterMode',shutter)
    mmc.setProperty('PIXIS','ShutterCloseDelay',shutterdelay);
   #End of if/else block
+
+def set_monochromator(serial_port="", center_wave=900, grating=1):
+  ser = serial.Serial(baudrate=9600,port=serial_port,timeout=20)
+  
+  if start_grating == 1:
+    grating_num = 1800
+  else:
+    grating_num = 300
+  
+  # goes to the central wavelength at the maximum speed
+  # returns a statement that indicates whether the command was followed
+  pix.goto_nm_max_speed(ser, center_wave)
+  # sets the grating of choice
+  # returns a statement that indicates whether the command was followed
+  pix.set_grating(ser, grating)

@@ -3,7 +3,7 @@ import Tkinter as tk
 from PIXIS_gui_function import use_spectrometer
 
 root = tk.Tk()
-root.geometry('500x300')
+root.geometry('500x500')
 root.resizable(width=False,height=False)
 
 #TODO: Add error handling
@@ -14,10 +14,12 @@ start_wave = tk.StringVar() #To be converted to integer using int()
 start_grating = tk.IntVar() #(1 or 2 = 1800 or 300 resp.)
 bool_picam = tk.BooleanVar()
 bool_background = tk.BooleanVar()
+shutter_mode = tk.IntVar()
 
 #set initial values
+shutter_mode.set(3)
 
-
+#Functions to be called by button presses
 def call_spectrometer():
   func_serial_port = serial_port.get()
   func_start_wave = int(start_wave.get())
@@ -30,6 +32,19 @@ def call_spectrometer():
                    func_bool_picam,
                    func_bool_background)
 
+def call_shutter_mode():
+  func_shutter_mode = shutter_mode.get()
+  func_bool_picam = bool_picam.get()
+  set_shutter_status(shutter_status=func_shutter_mode,
+                     bool_picam=func_bool_picam)
+
+def call_set_monochromater():
+  func_center_wave = center_wave.get()
+  func_start_grating = start_grating.get()
+  func_serial_port = serial_port.get()
+  set_monochromator(serial_port=func_serial_port,
+                    center_wave=func_center_wave,
+                    grating=func_start_grating)
 
 #Serial Port
 tk.Label(root,
@@ -84,6 +99,27 @@ tk.Radiobutton(root,
                text="No",
                variable=bool_background,
                value=False).place(x=250,y=230)
+
+#Select Shutter Mode
+tk.Label(root,
+         text="Shutter Mode",
+         justify = tk.LEFT).place(x=250,y=270)
+tk.Radiobutton(root,
+                text="Normal",
+                variable=shutter_mode,
+                value=3).place(x=250,y=290)
+tk.Radiobutton(root,
+                text="Always Closed",
+                variable=shutter_mode,
+                value=1).place(x=250,y=310)
+tk.Radiobutton(root,
+                text="Always Open",
+                variable=shutter_mode,
+                value=2).place(x=250,y=330)
+tk.Radiobutton(root,
+                text="Open Before Trigger",
+                variable=shutter_mode,
+                value=4).place(x=250,y=350)
 
 #Button to run the program:
 tk.Button(root,
