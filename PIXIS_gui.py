@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 import Tkinter as tk
-from PIXIS_gui_function import use_spectrometer
+from PIXIS_gui_function import *
 
 root = tk.Tk()
 root.geometry('500x500')
