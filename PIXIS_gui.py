@@ -13,11 +13,14 @@ serial_port = tk.StringVar()
 start_wave = tk.StringVar() #To be converted to integer using int()
 start_grating = tk.IntVar() #(1 or 2 = 1800 or 300 resp.)
 bool_picam = tk.BooleanVar()
-bool_background = tk.BooleanVar()
+bool_background = tk.IntVar()
 shutter_mode = tk.IntVar()
 
 #set initial values
+serial_port.set('COM4')
 shutter_mode.set(3)
+bool_picam.set(True)
+bool_background.set(1)
 
 #Functions to be called by button presses
 def call_spectrometer():
@@ -26,11 +29,11 @@ def call_spectrometer():
   func_start_grating = start_grating.get()
   func_bool_picam = bool_picam.get()
   func_bool_background = bool_background.get()
-  use_spectrometer(func_serial_port,
-                   func_start_wave,
-                   func_start_grating,
-                   func_bool_picam,
-                   func_bool_background)
+  use_spectrometer(ser=func_serial_port,
+                   start_wave=func_start_wave,
+                   start_grating=func_start_grating,
+                   bool_picam=func_bool_picam,
+                   bool_background=func_bool_background) #TODO: More params
 
 def call_shutter_mode():
   func_shutter_mode = shutter_mode.get()

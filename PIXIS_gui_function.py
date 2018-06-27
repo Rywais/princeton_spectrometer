@@ -15,7 +15,7 @@ def use_spectrometer(ser,
                      shutter_delay=0,
                      exposure=100,
                      bool_picam=True,
-                     bool_background=True):
+                     bool_background=1):
   ######################################################################
   ### Python code specific User Parameters
   ######################################################################
@@ -44,7 +44,6 @@ def use_spectrometer(ser,
     cam.loadLibrary()
     cam.getAvailableCameras()
     cam.connect()
-    cam.setParameter("ReadoutControlMode", 1) #FullFrame
   else:
     import MMCorePy
     mmc = MMCorePy.CMMCore()
@@ -209,56 +208,54 @@ def use_spectrometer(ser,
   ############################################################
   ### End of camera parameters
   ############################################################
+  if bool_background == 1:
+    # the code for taking an image came from:
+    # https://micro-manager.org/wiki/Matlab_Configuration, and then some slight
+    # modifications were made
+    if bool_picam:
+      img = cam.readNFrames(N=1,timeout=5000)
+      
+      width = 1340
+      height = 100
+    else:
+      mmc.snapImage()
+      img = mmc.getImage()
+      width = mmc.getImageWidth()
+      height = mmc.getImageHeight()
   
-  # the code for taking an image came from:
-  # https://micro-manager.org/wiki/Matlab_Configuration, and then some slight
-  # modifications were made
-  if bool_picam:
-    img = cam.readNFrames(N=1,timeout=5000)
     
-    width = 1340
-    height = 100
-  else:
-    mmc.snapImage()
-    img = mmc.getImage()
-    width = mmc.getImageWidth()
-    height = mmc.getImageHeight()
-
+    #Erase extraneous dimesnions to treat image as 2D numpy array
+    if bool_picam:
+      img = np.array(img)
+      img = np.squeeze(img)
+      img = np.reshape(img,(height,width)) 
+      img = img.astype('uint16')
+      
+      t = Image.fromarray(img, mode='I;16')
+      t.save('background_image.tif')
+      t.close()
+      my_file = open('background.npy', 'w')
+      np.save(my_file, img)
+      my_file.close()
+    else:
+      img = np.array(img)
   
-  #Erase extraneous dimesnions to treat image as 2D numpy array
-  if bool_picam:
-    img = np.array(img)
-    img = np.squeeze(img)
-    img = np.reshape(img,(height,width)) 
-    img = img.astype('uint16')
+      img = np.reshape(img, (height,width))
+      img = img.astype('uint32')
+  
+      t = Image.fromarray(img.astype('uint16'), mode='I;16')
+      t.save('background_image.tif')
+      t.close()
+      my_file = open('background.npy', 'w')
+      np.save(my_file, img)
+      my_file.close()
+    #End of if/else block
     
-    t = Image.fromarray(img, mode='I;16')
-    t.save('background_image.tif')
-    t.close()
-    my_file = open('background.npy', 'w')
-    np.save(my_file, img)
-    my_file.close()
-  else:
-    img = np.array(img)
-
-    img = np.reshape(img, (height,width))
-    img = img.astype('uint32')
-
-    t = Image.fromarray(img.astype('uint16'), mode='I;16')
-    t.save('background_image.tif')
-    t.close()
-    my_file = open('background.npy', 'w')
-    np.save(my_file, img)
-    my_file.close()
-  #End of if/else block
+    background_array = img
+  #End of Background acquisition block
   
-  background_array = img
-  
-  #TODO: Re-implement as Tkinter MessageBox???
-  prompt = 'Input 1 when the lightsource is ready and running.\n\n'
   while True:
-    my_input = raw_input(prompt)
-    if my_input == '1':
+    if askyesno('Verify','Is Light Source Ready?'):
       break
   
   for i in range(n_image):
@@ -284,7 +281,7 @@ def use_spectrometer(ser,
     t.close()
   
     #Ryan's approach using Saved Numpy Arrays
-    if ~bool_background:
+    if bool_background == 0:
       background_array = np.load('background.npy')
     difference = img.astype('int32') - background_array.astype('int32')
     difference = (difference.clip(min=0)).astype('uint32')
@@ -317,9 +314,10 @@ def use_spectrometer(ser,
     t.save(final_name)
     t.close()
   
-  
-  print 'Program is finished, so at least this much hasn\'t gone wrong today!'
-  
+  if bool_picam:
+    cam.unloadLibrary()
+  else:
+    pass #What to do for releasing Micromanager Resources?
   ser.close()
   ###########################################################
   ### End of Image Acquisition, Subraction of Background Noise, and Calibration
