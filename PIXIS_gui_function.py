@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
 from tkMessageBox import *
 from picam import *
-import MMCorePy
+#import MMCorePy #TODO: re-import for working version!
 
 def use_spectrometer(ser,
                      start_wave=900,
@@ -46,29 +46,23 @@ def use_spectrometer(ser,
     mmc
   except NameError:
     mmc_exists = False
-    print 'No mmc'
   else:
     mmc_exists = True
-    print 'Yes mmc'
   
   try:
     cam
   except NameError:
     cam_exists = False
-    print 'No cam'
   else:
     cam_exists = True
-    print 'Yes cam'
   
   #Code will be split like this between the two implementations as necessary
   if bool_picam and cam_exists == False:
-    #from picam import *
     cam = picam()
     cam.loadLibrary()
     cam.getAvailableCameras()
     cam.connect()
   elif bool_picam == False and mmc_exists == False:
-    #import MMCorePy
     mmc = MMCorePy.CMMCore()
     mmc.loadSystemConfiguration ('MMConfig.cfg');
   
@@ -366,17 +360,31 @@ def use_spectrometer(ser,
   ###########################################################
 
 def set_shutter_status(shutter_status=3,bool_picam=True):
-  
   shutter = shutter_status
 
-  if bool_picam:
-    #from picam import *
+  global mmc
+  global cam
+  
+  try:
+    mmc
+  except NameError:
+    mmc_exists = False
+  else:
+    mmc_exists = True
+  
+  try:
+    cam
+  except NameError:
+    cam_exists = False
+  else:
+    cam_exists = True
+  
+  if bool_picam and cam_exists == False:
     cam = picam()
     cam.loadLibrary()
     cam.getAvailableCameras()
     cam.connect()
-  else:
-    #import MMCorePy
+  elif bool_picam == False and mmc_exists == False:
     mmc = MMCorePy.CMMCore()
     mmc.loadSystemConfiguration ('MMConfig.cfg');
 
@@ -422,8 +430,18 @@ def set_shutter_status(shutter_status=3,bool_picam=True):
     pass #What to do for releasing Micromanager Resources?
 
 def set_monochromator(serial_port="", center_wave=900, grating=1):
-  ser = serial.Serial(baudrate=9600,port=serial_port,timeout=20)
+  global gui_serial
   
+  try:
+    gui_serial
+  except NameError:
+    ser_exists = False
+  else:
+    ser_exists = True
+  
+  if ser_exists == False:
+    gui_serial = serial.Serial(baudrate=9600,port=SERIAL_PORT,timeout=20)
+
   if start_grating == 1:
     grating_num = 1800
   else:
@@ -431,7 +449,7 @@ def set_monochromator(serial_port="", center_wave=900, grating=1):
   
   # goes to the central wavelength at the maximum speed
   # returns a statement that indicates whether the command was followed
-  pix.goto_nm_max_speed(ser, center_wave)
+  pix.goto_nm_max_speed(gui_ser, center_wave)
   # sets the grating of choice
   # returns a statement that indicates whether the command was followed
-  pix.set_grating(ser, grating)
+  pix.set_grating(gui_ser, grating)
