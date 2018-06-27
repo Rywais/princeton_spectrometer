@@ -7,8 +7,8 @@ import datetime
 import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
 from tkMessageBox import *
-import gc
-
+from picam import *
+import MMCorePy
 
 def use_spectrometer(ser,
                      start_wave=900,
@@ -62,13 +62,13 @@ def use_spectrometer(ser,
   
   #Code will be split like this between the two implementations as necessary
   if bool_picam and cam_exists == False:
-    from picam import *
+    #from picam import *
     cam = picam()
     cam.loadLibrary()
     cam.getAvailableCameras()
     cam.connect()
   elif bool_picam == False and mmc_exists == False:
-    import MMCorePy
+    #import MMCorePy
     mmc = MMCorePy.CMMCore()
     mmc.loadSystemConfiguration ('MMConfig.cfg');
   
@@ -370,13 +370,13 @@ def set_shutter_status(shutter_status=3,bool_picam=True):
   shutter = shutter_status
 
   if bool_picam:
-    from picam import *
+    #from picam import *
     cam = picam()
     cam.loadLibrary()
     cam.getAvailableCameras()
     cam.connect()
   else:
-    import MMCorePy
+    #import MMCorePy
     mmc = MMCorePy.CMMCore()
     mmc.loadSystemConfiguration ('MMConfig.cfg');
 

@@ -21,6 +21,8 @@ serial_port.set('COM4')
 shutter_mode.set(3)
 bool_picam.set(True)
 bool_background.set(1)
+start_grating.set(2)
+start_wave.set('900')
 
 #Functions to be called by button presses
 def call_spectrometer():
