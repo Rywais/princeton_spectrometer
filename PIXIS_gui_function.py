@@ -322,6 +322,7 @@ def use_spectrometer(ser,
     t.close()
   
   if bool_picam:
+    cam.disconnect()
     cam.unloadLibrary()
   else:
     pass #What to do for releasing Micromanager Resources?
@@ -378,6 +379,12 @@ def set_shutter_status(shutter_status=3,bool_picam=True):
    mmc.setProperty('PIXIS','ShutterMode',shutter)
    mmc.setProperty('PIXIS','ShutterCloseDelay',shutterdelay);
   #End of if/else block
+
+  if bool_picam:
+    cam.disconnect()
+    cam.unloadLibrary()
+  else:
+    pass #What to do for releasing Micromanager Resources?
 
 def set_monochromator(serial_port="", center_wave=900, grating=1):
   ser = serial.Serial(baudrate=9600,port=serial_port,timeout=20)
