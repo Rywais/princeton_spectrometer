@@ -214,6 +214,7 @@ def use_spectrometer(ser,
     # the code for taking an image came from:
     # https://micro-manager.org/wiki/Matlab_Configuration, and then some slight
     # modifications were made
+    img = None
     if bool_picam:
       img = cam.readNFrames(N=1,timeout=5000)
       
@@ -285,13 +286,17 @@ def use_spectrometer(ser,
     #Ryan's approach using Saved Numpy Arrays
     if bool_background == 0:
       background_array = np.load('background.npy')
-    difference = img.astype('int32') - background_array.astype('int32')
+
+    if bool_background ~= 2:
+      difference = img.astype('int32') - background_array.astype('int32')
+    else:
+      difference = img.astype('int32')
     difference = (difference.clip(min=0)).astype('uint32')
     t = Image.fromarray(difference)
   
     
     intensity = np.zeros(len(difference[0,:]))
-  
+
     if line_cam == 0:
       for i in range(len(difference[0,:])):
         intensity[i] = np.sum(difference[:,i].astype('float64'))/100.
