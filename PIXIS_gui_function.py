@@ -6,7 +6,7 @@ from PIL import ImageChops
 import datetime
 import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
-from Tkinter import *
+from Tkinter import tkMessageBox
 from tkMessageBox import *
 
 
