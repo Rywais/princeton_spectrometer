@@ -169,15 +169,20 @@ def use_spectrometer(ser,
   # the following makes sure that the camera operates at the correct
   # temperature
 
-  #TODO: Add output for user to see that the camera is cooling!
   if bool_picam:
     pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
     
+    if pixis_temp > -75. :
+      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C')
+
     while pixis_temp > -75. :
       pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
       time.sleep(5)
   else:
     pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
+
+    if pixis_temp > -75. :
+      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C')
 
     while pixis_temp > -75. :
       pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
