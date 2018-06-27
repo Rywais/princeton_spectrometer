@@ -6,7 +6,7 @@ from PIL import ImageChops
 import datetime
 import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
-from Tkinter import *
+from Tkinter import tkMessageBox
 from tkMessageBox import *
 
 
@@ -287,7 +287,7 @@ def use_spectrometer(ser,
     if bool_background == 0:
       background_array = np.load('background.npy')
 
-    if bool_background ~= 2:
+    if bool_background != 2:
       difference = img.astype('int32') - background_array.astype('int32')
     else:
       difference = img.astype('int32')
