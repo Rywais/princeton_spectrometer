@@ -10,7 +10,7 @@ root.resizable(width=False,height=False)
 
 #Tk variables
 serial_port = tk.StringVar()
-start_wave = tk.StringVar() #To be converted to integer using int()
+start_wave = tk.StringVar() #To be converted to integer using float()
 exposure = tk.StringVar() #To be converted to integer using int()
 n_images = tk.StringVar() #To be converted to integer using int()
 shutter_delay = tk.StringVar() #To be converted to integer using int()
@@ -35,7 +35,7 @@ def call_spectrometer():
   for i in disable_list:
     i.config(state=tk.DISABLED)
   func_serial_port = serial_port.get()
-  func_start_wave = int(start_wave.get())
+  func_start_wave = float(start_wave.get())
   func_start_grating = start_grating.get()
   func_bool_picam = bool_picam.get()
   func_bool_background = bool_background.get()
@@ -62,7 +62,7 @@ def call_shutter_mode():
 def call_set_monochromator():
   for i in disable_list:
     i.config(state=tk.DISABLED)
-  func_center_wave = center_wave.get()
+  func_center_wave = float(start_wave.get())
   func_start_grating = start_grating.get()
   func_serial_port = serial_port.get()
   set_monochromator(serial_port=func_serial_port,

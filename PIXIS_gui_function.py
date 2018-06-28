@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
 from tkMessageBox import *
 from picam import *
-#import MMCorePy #TODO: re-import for working version!
+import MMCorePy
 
 def use_spectrometer(ser,
                      start_wave=900,
@@ -285,6 +285,9 @@ def use_spectrometer(ser,
     #End of if/else block
     
     background_array = img
+  else:
+    width=1340
+    height=100
   #End of Background acquisition block
   
   while True:
@@ -411,9 +414,6 @@ def set_shutter_status(shutter_status=3,bool_picam=True):
     cam.setParameter('ShutterTimingMode', shutter)
     cam.sendConfiguration() 
   else:
-   mmc.setProperty('PIXIS','Exposure',exposure);
-   mmc.setProperty('PIXIS','Gain',gain)
-
    if shutter == 1:
      shutter = 'Always closed'
    elif shutter == 2:
@@ -424,7 +424,6 @@ def set_shutter_status(shutter_status=3,bool_picam=True):
      shutter = 'Open Before Trigger'
 
    mmc.setProperty('PIXIS','ShutterMode',shutter)
-   mmc.setProperty('PIXIS','ShutterCloseDelay',shutterdelay);
   #End of if/else block
 
   if bool_picam:
@@ -445,16 +444,16 @@ def set_monochromator(serial_port="", center_wave=900, grating=1):
     ser_exists = True
   
   if ser_exists == False:
-    gui_serial = serial.Serial(baudrate=9600,port=SERIAL_PORT,timeout=20)
+    gui_serial = serial.Serial(baudrate=9600,port=serial_port,timeout=20)
 
-  if start_grating == 1:
+  if grating == 1:
     grating_num = 1800
   else:
     grating_num = 300
   
   # goes to the central wavelength at the maximum speed
   # returns a statement that indicates whether the command was followed
-  pix.goto_nm_max_speed(gui_ser, center_wave)
+  pix.goto_nm_max_speed(gui_serial, center_wave)
   # sets the grating of choice
   # returns a statement that indicates whether the command was followed
-  pix.set_grating(gui_ser, grating)
+  pix.set_grating(gui_serial, grating)
