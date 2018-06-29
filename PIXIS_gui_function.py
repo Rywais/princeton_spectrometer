@@ -8,7 +8,10 @@ import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
 from tkMessageBox import *
 from picam import *
-import MMCorePy
+try:
+  import MMCorePy
+except ImportError:
+  pass
 
 def use_spectrometer(ser,
                      start_wave=900,
@@ -173,7 +176,8 @@ def use_spectrometer(ser,
     pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
     
     if pixis_temp > -75. :
-      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C')
+      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C, and try again')
+      return
 
     while pixis_temp > -75. :
       pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
@@ -182,7 +186,8 @@ def use_spectrometer(ser,
     pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
 
     if pixis_temp > -75. :
-      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C')
+      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C, and try again')
+      return
 
     while pixis_temp > -75. :
       pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
@@ -457,3 +462,6 @@ def set_monochromator(serial_port="", center_wave=900, grating=1):
   # sets the grating of choice
   # returns a statement that indicates whether the command was followed
   pix.set_grating(gui_serial, grating)
+
+def start_cooling(bool_picam):
+  pass

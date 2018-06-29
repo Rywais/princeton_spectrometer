@@ -9,6 +9,7 @@ root.resizable(width=False,height=False)
 #TODO: Add error handling
 
 #Tk variables
+temperature_status = tk.StringVar()
 serial_port = tk.StringVar()
 start_wave = tk.StringVar() #To be converted to integer using float()
 exposure = tk.StringVar() #To be converted to integer using int()
@@ -19,7 +20,12 @@ bool_picam = tk.BooleanVar()
 bool_background = tk.IntVar()
 shutter_mode = tk.IntVar()
 
+#Global variables
+global cam
+global mmc
+
 #set initial values
+temperature_status.set('CCD Temperature: N/A')
 serial_port.set('COM4')
 shutter_mode.set(3)
 bool_picam.set(True)
@@ -68,6 +74,14 @@ def call_set_monochromator():
   set_monochromator(serial_port=func_serial_port,
                     center_wave=func_center_wave,
                     grating=func_start_grating)
+
+############################################################
+### Status Section  ########################################
+############################################################
+
+tk.Label(root,
+         textvariable=temperature_status,
+         justify=tk.LEFT).place(x=280,y=340)
 
 ############################################################
 ### Monochromator Section ##################################
@@ -160,23 +174,23 @@ Examples:
 - COM4
 - /dev/ttyUSB0""",
          justify=tk.LEFT).place(x=250,y=380)
-d1 = tk.Entry(root, textvariable=serial_port, width=20)
-d1.place(x=250,y=440)
+serial_entry = tk.Entry(root, textvariable=serial_port, width=20)
+serial_entry.place(x=250,y=440)
 
 #PICAM or Micromanager
 tk.Label(root,
          text = "Use PICAM or Micro-Manager?",
          justify = tk.LEFT).place(x=10,y=360)
-d2 = tk.Radiobutton(root,
+picam_button = tk.Radiobutton(root,
                text="PICAM",
                variable=bool_picam,
                value=True)
-d2.place(x=10,y=380)
-d3 = tk.Radiobutton(root,
+picam_button.place(x=10,y=380)
+mm_button = tk.Radiobutton(root,
                text="Micro-Manager",
                variable=bool_picam,
                value=False)
-d3.place(x=10,y=400)
+mm_button.place(x=10,y=400)
 
 #Exposure
 tk.Label(root,
@@ -222,6 +236,19 @@ tk.Button(root,
           height=3).place(x=250,y=560)
 
 #global disabled_list
-disable_list = (d1,d2,d3)
+disable_list = (serial_entry,picam_button,mm_button)
 
-tk.mainloop()
+my_time = time.time()
+while True:
+  root.update()
+
+  #Update CCD Temperature Display
+  if (time.time() - my_time) > 0.5 and picam_button["state"] == 'disabled':
+    if bool_picam.get() == True:
+      pixis_temp = int(float(cam.getParameter('SensorTemperatureReading')))
+    else:
+      pixis_temp = int(float(mmc.getProperty('PIXIS','CCDTemperature')))
+    temperature_status.set('CCD Temperature: ' + str(pixis_temp))
+    my_time = time.time()
+
+  
