@@ -37,6 +37,18 @@ exposure.set('100')
 n_images.set('1')
 shutter_delay.set('0')
 
+#Temperature Update Function
+def update_temperature():
+  #Update CCD Temperature Display
+  if (time.time() - my_time) > 0.5 and picam_button["state"] == 'disabled':
+    if bool_picam.get() == True:
+      pixis_temp = int(float(cam.getParameter('SensorTemperatureReading')))
+    else:
+      pixis_temp = int(float(mmc.getProperty('PIXIS','CCDTemperature')))
+    temperature_status.set('CCD Temperature: ' + str(pixis_temp))
+    my_time = time.time()
+  root.after(1000,update_temperature)
+
 #Functions to be called by button presses
 def call_spectrometer():
   for i in disable_list:
@@ -240,16 +252,9 @@ tk.Button(root,
 disable_list = (serial_entry,picam_button,mm_button)
 
 my_time = time.time()
+update_temperature()
 while True:
   root.update()
 
-  #Update CCD Temperature Display
-  if (time.time() - my_time) > 0.5 and picam_button["state"] == 'disabled':
-    if bool_picam.get() == True:
-      pixis_temp = int(float(cam.getParameter('SensorTemperatureReading')))
-    else:
-      pixis_temp = int(float(mmc.getProperty('PIXIS','CCDTemperature')))
-    temperature_status.set('CCD Temperature: ' + str(pixis_temp))
-    my_time = time.time()
 
   
