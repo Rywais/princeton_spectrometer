@@ -1,6 +1,7 @@
 #!/usr/bin/python2
 import Tkinter as tk
 from PIXIS_gui_function import *
+import my_globals
 
 root = tk.Tk()
 root.geometry('500x660')

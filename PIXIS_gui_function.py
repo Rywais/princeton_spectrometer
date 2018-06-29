@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
 from tkMessageBox import *
 from picam import *
+import my_globals
 try:
   import MMCorePy
 except ImportError:
