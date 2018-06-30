@@ -177,7 +177,6 @@ def use_spectrometer(ser,
     
     if pixis_temp > -75. :
       showinfo('CCD Cooling','Please wait for the CCD to cool to -75C, and try again')
-      return
 
     while pixis_temp > -75. :
       pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
@@ -187,7 +186,6 @@ def use_spectrometer(ser,
 
     if pixis_temp > -75. :
       showinfo('CCD Cooling','Please wait for the CCD to cool to -75C, and try again')
-      return
 
     while pixis_temp > -75. :
       pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))

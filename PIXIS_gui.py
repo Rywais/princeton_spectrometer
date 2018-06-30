@@ -9,7 +9,6 @@ root.resizable(width=False,height=False)
 #TODO: Add error handling
 
 #Tk variables
-temperature_status = tk.StringVar()
 serial_port = tk.StringVar()
 start_wave = tk.StringVar() #To be converted to integer using float()
 exposure = tk.StringVar() #To be converted to integer using int()
@@ -19,10 +18,6 @@ start_grating = tk.IntVar() #(1 or 2 = 1800 or 300 resp.)
 bool_picam = tk.BooleanVar()
 bool_background = tk.IntVar()
 shutter_mode = tk.IntVar()
-
-#Global variables
-global cam
-global mmc
 
 #set initial values
 temperature_status.set('CCD Temperature: N/A')
@@ -238,17 +233,4 @@ tk.Button(root,
 #global disabled_list
 disable_list = (serial_entry,picam_button,mm_button)
 
-my_time = time.time()
-while True:
-  root.update()
-
-  #Update CCD Temperature Display
-  if (time.time() - my_time) > 0.5 and picam_button["state"] == 'disabled':
-    if bool_picam.get() == True:
-      pixis_temp = int(float(cam.getParameter('SensorTemperatureReading')))
-    else:
-      pixis_temp = int(float(mmc.getProperty('PIXIS','CCDTemperature')))
-    temperature_status.set('CCD Temperature: ' + str(pixis_temp))
-    my_time = time.time()
-
-  
+root.mainloop()
