@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import PIXIS_Acton_Functions as pix
 from tkMessageBox import *
 from picam import *
-import my_globals
 try:
   import MMCorePy
 except ImportError:
@@ -23,6 +22,7 @@ def use_spectrometer(ser,
                      bool_picam=True,
                      bool_background=1,
                      bool_save_fig=False,
+                     n_image= 1 ,
                      line_cam = 0):
   ######################################################################
   ### Python code specific User Parameters
@@ -42,7 +42,6 @@ def use_spectrometer(ser,
   # 1.) Always Closed 2.) Always Open 3.) Normal 4.) Open Before Trigger
   shutter = shutter_status
   shutterdelay = shutter_delay
-  n_image = 1
   
   global mmc
   global cam
@@ -300,7 +299,7 @@ def use_spectrometer(ser,
   while True:
     if askyesno('Verify','Is Light Source Ready?'):
       break
-  
+  plt.ion()
   for i in range(n_image):
     if bool_picam:
       img = cam.readNFrames(N=1,timeout=5000)
@@ -338,11 +337,11 @@ def use_spectrometer(ser,
     intensity = np.zeros(len(difference[0,:]))
 
     if line_cam == 0:
-      for i in range(len(difference[0,:])):
-        intensity[i] = np.sum(difference[:,i].astype('float64'))/100.
+      for j in range(len(difference[0,:])):
+        intensity[j] = np.sum(difference[:,j].astype('float64'))/100.
     else:
-      for i in range(len(difference[0,:])):
-        intensity[i] = difference[line_cam, i-1]
+      for j in range(len(difference[0,:])):
+        intensity[j] = difference[line_cam, j-1]
     
     #plot next...
     fig = plt.figure()
@@ -353,7 +352,7 @@ def use_spectrometer(ser,
     ax.set_ylabel('Intensity')
   
     ax.plot(true_lambda, intensity)
-    plt.show()
+    #plt.show()
   
     current_date_time = now.strftime('%Y-%m-%dT%H-%M-%S')
     final_name = 'Calibrated_Image_No_Noise_' + current_date_time + '.tif'
@@ -363,17 +362,9 @@ def use_spectrometer(ser,
 
     if bool_save_fig == True:
       fig_name = 'Spectrum_'+current_date_time+'_frame_'+str(i)+'.png'
+      print 'Saving Figure as:' + fig_name
       fig.savefig(fig_name)
-  
-  if bool_picam:
-    #cam.disconnect()
-    #cam.unloadLibrary()
-    pass
-  else:
-    pass #What to do for releasing Micromanager Resources?
-  #ser.close()
 
-  
   ###########################################################
   ### End of Image Acquisition, Subraction of Background Noise, and Calibration
   ###########################################################

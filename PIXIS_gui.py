@@ -1,7 +1,6 @@
 #!/usr/bin/python2
 import Tkinter as tk
 from PIXIS_gui_function import *
-import my_globals
 
 root = tk.Tk()
 root.geometry('500x760')
@@ -59,8 +58,9 @@ def call_spectrometer():
   func_shutter_status = shutter_mode.get()
   func_shutter_delay = int(shutter_delay.get())
   func_exposure = int(exposure.get())
-  func_save_fig = save_fig.get()
+  func_bool_save_fig = save_fig.get()
   func_line_cam = int(line_cam.get())
+  func_n_image = int(n_images.get())
   use_spectrometer(ser=func_serial_port,
                    start_wave=func_start_wave,
                    start_grating=func_start_grating,
@@ -69,7 +69,8 @@ def call_spectrometer():
                    exposure=func_exposure,
                    bool_picam=func_bool_picam,
                    bool_background=func_bool_background,
-                   save_fig=func_save_fig,
+                   bool_save_fig=func_bool_save_fig,
+                   n_image=func_n_image,
                    line_cam=func_line_cam)
 
 def call_shutter_mode():
