@@ -4,13 +4,12 @@ from PIXIS_gui_function import *
 import my_globals
 
 root = tk.Tk()
-root.geometry('500x660')
+root.geometry('500x760')
 root.resizable(width=False,height=False)
 
 #TODO: Add error handling
 
 #Tk variables
-temperature_status = tk.StringVar()
 serial_port = tk.StringVar()
 start_wave = tk.StringVar() #To be converted to integer using float()
 exposure = tk.StringVar() #To be converted to integer using int()
@@ -20,13 +19,10 @@ start_grating = tk.IntVar() #(1 or 2 = 1800 or 300 resp.)
 bool_picam = tk.BooleanVar()
 bool_background = tk.IntVar()
 shutter_mode = tk.IntVar()
-
-#Global variables
-global cam
-global mmc
+save_fig = tk.BooleanVar()
+line_cam = tk.StringVar()
 
 #set initial values
-temperature_status.set('CCD Temperature: N/A')
 serial_port.set('COM4')
 shutter_mode.set(3)
 bool_picam.set(True)
@@ -36,6 +32,8 @@ start_wave.set('900')
 exposure.set('100')
 n_images.set('1')
 shutter_delay.set('0')
+save_fig.set(False)
+line_cam.set('0')
 
 #Temperature Update Function
 def update_temperature():
@@ -61,6 +59,8 @@ def call_spectrometer():
   func_shutter_status = shutter_mode.get()
   func_shutter_delay = int(shutter_delay.get())
   func_exposure = int(exposure.get())
+  func_save_fig = save_fig.get()
+  func_line_cam = int(line_cam.get())
   use_spectrometer(ser=func_serial_port,
                    start_wave=func_start_wave,
                    start_grating=func_start_grating,
@@ -68,7 +68,9 @@ def call_spectrometer():
                    shutter_delay=func_shutter_delay,
                    exposure=func_exposure,
                    bool_picam=func_bool_picam,
-                   bool_background=func_bool_background)
+                   bool_background=func_bool_background,
+                   save_fig=func_save_fig,
+                   line_cam=func_line_cam)
 
 def call_shutter_mode():
   for i in disable_list:
@@ -87,14 +89,6 @@ def call_set_monochromator():
   set_monochromator(serial_port=func_serial_port,
                     center_wave=func_center_wave,
                     grating=func_start_grating)
-
-############################################################
-### Status Section  ########################################
-############################################################
-
-tk.Label(root,
-         textvariable=temperature_status,
-         justify=tk.LEFT).place(x=280,y=340)
 
 ############################################################
 ### Monochromator Section ##################################
@@ -240,6 +234,24 @@ tk.Radiobutton(root,
                variable=bool_background,
                value=2).place(x=10,y=620)
 
+#Line cam
+tk.Label(root,
+         text="Line Cam (0 for averaging)",
+         justify = tk.LEFT).place(x=10,y=660)
+tk.Entry(root, textvariable=line_cam, width=10).place(x=10,y=680)
+
+#Start Grating
+tk.Label(root,
+         text = "Save Plots?",
+         justify = tk.LEFT).place(x=10,y=700)
+tk.Radiobutton(root,
+               text="Yes",
+               variable=save_fig,
+               value=True).place(x=10,y=720)
+tk.Radiobutton(root,
+               text="No",
+               variable=save_fig,
+               value=False).place(x=10,y=740)
 
 #Button to take images:
 tk.Button(root,
@@ -251,10 +263,4 @@ tk.Button(root,
 #global disabled_list
 disable_list = (serial_entry,picam_button,mm_button)
 
-my_time = time.time()
-update_temperature()
-while True:
-  root.update()
-
-
-  
+root.mainloop()
