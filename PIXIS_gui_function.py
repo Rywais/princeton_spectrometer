@@ -20,7 +20,9 @@ def use_spectrometer(ser,
                      shutter_delay=0,
                      exposure=100,
                      bool_picam=True,
-                     bool_background=1):
+                     bool_background=1,
+                     bool_save_fig=False,
+                     line_cam = 0):
   ######################################################################
   ### Python code specific User Parameters
   ######################################################################
@@ -40,7 +42,6 @@ def use_spectrometer(ser,
   shutter = shutter_status
   shutterdelay = shutter_delay
   n_image = 1
-  line_cam = 0 #Which line to view, average the whole image if zero
   
   global mmc
   global cam
@@ -176,19 +177,21 @@ def use_spectrometer(ser,
     pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
     
     if pixis_temp > -75. :
-      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C, and try again')
+      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C')
 
     while pixis_temp > -75. :
       pixis_temp = float(cam.getParameter('SensorTemperatureReading'))
+      print 'CCD Temperature: ' + str(pixis_temp)
       time.sleep(5)
   else:
     pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
 
     if pixis_temp > -75. :
-      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C, and try again')
+      showinfo('CCD Cooling','Please wait for the CCD to cool to -75C')
 
     while pixis_temp > -75. :
       pixis_temp = float(mmc.getProperty('PIXIS','CCDTemperature'))
+      print 'CCD Temperature: ' + str(pixis_temp)
       time.sleep(5)
   
   ############################################################
@@ -338,7 +341,7 @@ def use_spectrometer(ser,
         intensity[i] = np.sum(difference[:,i].astype('float64'))/100.
     else:
       for i in range(len(difference[0,:])):
-        intensity[i] = difference[line_cam, i]
+        intensity[i] = difference[line_cam, i-1]
     
     #plot next...
     fig = plt.figure()
@@ -356,6 +359,10 @@ def use_spectrometer(ser,
   
     t.save(final_name)
     t.close()
+
+    if bool_save_fig == True:
+      fig_name = 'Spectrum_'+current_date_time+'_frame_'+str(i)+'.png'
+      fig.savefig(fig_name)
   
   if bool_picam:
     #cam.disconnect()
@@ -460,6 +467,3 @@ def set_monochromator(serial_port="", center_wave=900, grating=1):
   # sets the grating of choice
   # returns a statement that indicates whether the command was followed
   pix.set_grating(gui_serial, grating)
-
-def start_cooling(bool_picam):
-  pass
