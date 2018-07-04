@@ -13,6 +13,12 @@ try:
 except ImportError:
   pass
 
+def rescale_uint16_arr(arr):
+  arr = arr.astype('float64')
+  max_val = np.amax(arr)
+  arr = arr * float(0xfffe) / max_val
+  return arr.astype('uint16')
+
 def use_spectrometer(ser,
                      start_wave=900,
                      start_grating=1,
@@ -273,8 +279,9 @@ def use_spectrometer(ser,
       t = Image.fromarray(img, mode='I;16')
       t.save('background_image.tif')
       t.close()
-      my_file = open('background.npy', 'w')
-      np.save(my_file, img)
+      my_file = open('background.txt', 'w')
+#     np.save(my_file, img)
+      np.savetxt(my_file, img, fmt='%d')
       my_file.close()
     else:
       img = np.array(img)
@@ -285,8 +292,9 @@ def use_spectrometer(ser,
       t = Image.fromarray(img.astype('uint16'), mode='I;16')
       t.save('background_image.tif')
       t.close()
-      my_file = open('background.npy', 'w')
-      np.save(my_file, img)
+      my_file = open('background.txt', 'w')
+#     np.save(my_file, img)
+      np.savetxt(my_file, img, fmt='%d')
       my_file.close()
     #End of if/else block
     
@@ -314,17 +322,25 @@ def use_spectrometer(ser,
       height = mmc.getImageHeight()
       img = np.array(img)
       img = np.reshape(img, (height,width))
-      img = img.astype('uint32')
+      img = img.astype('uint16')
     now = datetime.datetime.now()
     fullname = now.strftime('Raw_Image_Data_%Y-%m-%dT%H-%M-%S.tif')
     
-    t = Image.fromarray(img.astype('uint16'), mode='I;16')
+    t = Image.fromarray(img, mode='I;16')
     t.save(fullname)
+    t.close()
+
+    t = Image.fromarray(rescale_uint16_arr(img), mode='I;16')
+    t.show()
     t.close()
   
     #Ryan's approach using Saved Numpy Arrays
     if bool_background == 0:
-      background_array = np.load('background.npy')
+#     background_array = np.load('background.npy')
+      background_array = np.loadtxt('background.txt',dtype='uint16')
+    else:
+      array_mangling = np.array_equal(background_array,np.loadtxt('background.txt',dtype='uint16')
+      print 'Background array isn\'t being mangled: ' +str(array_mangling)
 
     if bool_background != 2:
       difference = img.astype('int32') - background_array.astype('int32')
@@ -358,6 +374,10 @@ def use_spectrometer(ser,
     final_name = 'Calibrated_Image_No_Noise_' + current_date_time + '.tif'
   
     t.save(final_name)
+    t.close()
+
+    t = Image.fromarray(rescale_uint16_arr(difference), mode='I;16')
+    t.show()
     t.close()
 
     if bool_save_fig == True:
