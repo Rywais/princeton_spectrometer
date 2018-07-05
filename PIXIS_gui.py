@@ -73,6 +73,32 @@ def call_spectrometer():
                    n_image=func_n_image,
                    line_cam=func_line_cam)
 
+def call_spectrometer_cts():
+  for i in disable_list:
+    i.config(state=tk.DISABLED)
+  func_serial_port = serial_port.get()
+  func_start_wave = float(start_wave.get())
+  func_start_grating = start_grating.get()
+  func_bool_picam = bool_picam.get()
+  func_bool_background = bool_background.get()
+  func_shutter_status = shutter_mode.get()
+  func_shutter_delay = int(shutter_delay.get())
+  func_exposure = int(exposure.get())
+  func_bool_save_fig = save_fig.get()
+  func_line_cam = int(line_cam.get())
+  func_n_image = int(n_images.get())
+  live_spectrometer(ser=func_serial_port,
+                   start_wave=func_start_wave,
+                   start_grating=func_start_grating,
+                   shutter_status=func_shutter_status,
+                   shutter_delay=func_shutter_delay,
+                   exposure=func_exposure,
+                   bool_picam=func_bool_picam,
+                   bool_background=func_bool_background,
+                   bool_save_fig=func_bool_save_fig,
+                   n_image=func_n_image,
+                   line_cam=func_line_cam)
+
 def call_shutter_mode():
   for i in disable_list:
     i.config(state=tk.DISABLED)
@@ -260,6 +286,13 @@ tk.Button(root,
           command = call_spectrometer,
           width=20,
           height=3).place(x=250,y=560)
+
+#Button to take images:
+tk.Button(root,
+          text="Continuous View",
+          command = call_spectrometer_cts,
+          width=20,
+          height=3).place(x=250,y=640)
 
 #global disabled_list
 disable_list = (serial_entry,picam_button,mm_button)
