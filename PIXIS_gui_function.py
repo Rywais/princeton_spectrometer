@@ -16,7 +16,8 @@ except ImportError:
 def rescale_uint16_arr(arr):
   arr = arr.astype('float64')
   max_val = np.amax(arr)
-  arr = arr * float(0xfffe) / max_val
+  min_val = np.amin(arr)
+  arr = (arr - min_val) * float(0xfffe) / (max_val-min_val)
   return arr.astype('uint16')
 
 def use_spectrometer(ser,
@@ -338,9 +339,6 @@ def use_spectrometer(ser,
     if bool_background == 0:
 #     background_array = np.load('background.npy')
       background_array = np.loadtxt('background.txt',dtype='uint16')
-    else:
-      array_mangling = np.array_equal(background_array,np.loadtxt('background.txt',dtype='uint16')
-      print 'Background array isn\'t being mangled: ' +str(array_mangling)
 
     if bool_background != 2:
       difference = img.astype('int32') - background_array.astype('int32')
