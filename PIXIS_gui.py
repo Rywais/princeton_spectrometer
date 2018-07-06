@@ -120,9 +120,13 @@ def call_set_monochromator():
 def reset_monochromator():
   func_center_wave = float(start_wave.get())
   func_serial_port = serial_port.get()
-  set_monochromator(serial_port=func_serial_port,
-                    center_wave=func_center_wave,
-                    grating=1)
+  try:
+    set_monochromator(serial_port=func_serial_port,
+                      center_wave=func_center_wave,
+                      grating=1)
+  except:
+    pass
+  root.destroy()
   
 
 ############################################################
