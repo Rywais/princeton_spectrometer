@@ -807,6 +807,10 @@ def live_spectrometer(ser,
       for j in range(len(difference[0,:])):
         intensity[j] = difference[line_cam, j-1]
     
+    #Clear old plots
+    fig1.clear()
+    fig2.clear()
+
     #plot next...
     fig = plt.figure(fig1.number)
     fig.suptitle('corrected spectrum')
@@ -821,10 +825,14 @@ def live_spectrometer(ser,
     fig = plt.figure(fig2.number)
     plt.imshow(rescale_uint16_arr(difference))
 
+    #Ever so important time for Plots to update their own drawings!
+    plt.pause(0.5)
+
     #Detect if User has closed either figures and terminate if so.
     if plt.fignum_exists(fig1.number) == False or \
         plt.fignum_exists(fig2.number) == False:
       break
+    print 'loop iteration Complete'
   
   ###########################################################
   ### End of Image Acquisition, Subraction of Background Noise, and Calibration
