@@ -771,6 +771,7 @@ def live_spectrometer(ser,
   plt.ion()
   fig1 = plt.figure()
   fig2 = plt.figure()
+  frame_index = 1
   while True:
     if bool_picam:
       img = cam.readNFrames(N=1,timeout=5000)
@@ -786,7 +787,14 @@ def live_spectrometer(ser,
       img = np.array(img)
       img = np.reshape(img, (height,width))
       img = img.astype('uint16')
-    
+    now = datetime.datetime.now()
+    fullname = now.strftime('Raw_Image_Data_%Y-%m-%dT%H-%M-%S')
+    fullname = fullname + '_frame_'+str(frame_index)+'.tif'
+
+    t = Image.fromarray(img, mode='I;16')
+    t.save(fullname)
+    t.close()
+
     #Ryan's approach using Saved Numpy Arrays
     if bool_background == 0:
       background_array = np.loadtxt('background.txt',dtype='uint16')
@@ -797,6 +805,7 @@ def live_spectrometer(ser,
     else:
       difference = img.astype('int32')
     difference = (difference.clip(min=0)).astype('uint16')
+    t = Image.fromarray(difference)
     
     #Generate Intensity Data
     intensity = np.zeros(len(difference[0,:]))
@@ -826,13 +835,24 @@ def live_spectrometer(ser,
     plt.imshow(rescale_uint16_arr(difference))
 
     #Ever so important time for Plots to update their own drawings!
-    plt.pause(0.5)
+    plt.pause(0.3)
+
+    current_date_time = now.strftime('%Y-%m-%dT%H-%M-%S')
+    final_name = 'Calibrated_Image_No_Noise_' + current_date_time
+    final_name = final_name + '_frame_'+str(frame_index)+'.tif'
+
+    t.save(final_name)
+    t.close()
+
+    if bool_save_fig == True:
+      fig_name = 'Spectrum_'+current_date_time+'_frame_'+str(frame_index)+'.png'
+      fig1.savefig(fig_name)
 
     #Detect if User has closed either figures and terminate if so.
     if plt.fignum_exists(fig1.number) == False or \
         plt.fignum_exists(fig2.number) == False:
       break
-    print 'loop iteration Complete'
+    frame_index = frame_index + 1
   
   ###########################################################
   ### End of Image Acquisition, Subraction of Background Noise, and Calibration

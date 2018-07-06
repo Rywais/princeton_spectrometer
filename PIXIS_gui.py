@@ -117,6 +117,14 @@ def call_set_monochromator():
                     center_wave=func_center_wave,
                     grating=func_start_grating)
 
+def reset_monochromator():
+  func_center_wave = float(start_wave.get())
+  func_serial_port = serial_port.get()
+  set_monochromator(serial_port=func_serial_port,
+                    center_wave=func_center_wave,
+                    grating=1)
+  
+
 ############################################################
 ### Monochromator Section ##################################
 ############################################################
@@ -297,4 +305,5 @@ tk.Button(root,
 #global disabled_list
 disable_list = (serial_entry,picam_button,mm_button)
 
+root.protocol("WM_DELETE_WINDOW", reset_monochromator)
 root.mainloop()
